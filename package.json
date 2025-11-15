@@ -1,0 +1,29 @@
+{
+  "name": "build-account-check",
+  "version": "1.0.0",
+  "description": "Polling service that checks accounts before scheduled jobs execute.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "ts-node --transpile-only src/index.ts"
+  },
+  "keywords": [
+    "scheduler",
+    "account"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
