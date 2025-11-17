@@ -1,17 +1,23 @@
-import { httpClient } from '../httpClient';
-import { logger } from '../logger';
-import { appConfig } from '../config';
-import { JobDetail, JobDetailResponse, JobListResponse, JobSummary } from '../types';
+import { httpClient } from "../httpClient";
+import { logger } from "../logger";
+import { appConfig } from "../config";
+import {
+  JobDetail,
+  JobDetailResponse,
+  JobListResponse,
+  JobSummary,
+} from "../types";
 
 const jobListParams = {
-  job_id: '',
-  create_by: '',
-  start_time: '',
-  end_time: ''
+  job_id: "",
+  create_by: "",
+  start_time: "",
+  end_time: "",
 };
 
 export async function fetchWaitingJobs(): Promise<JobSummary[]> {
-  const { JOB_LIST_BASE_URL, TEAM_ID, JOB_LIST_PAGE_SIZE, API_TOKEN } = appConfig;
+  const { JOB_LIST_BASE_URL, TEAM_ID, JOB_LIST_PAGE_SIZE, API_TOKEN } =
+    appConfig;
   const waitingJobs: JobSummary[] = [];
   let page = 1;
   let hasMore = true;
@@ -20,17 +26,21 @@ export async function fetchWaitingJobs(): Promise<JobSummary[]> {
     const params = {
       ...jobListParams,
       team_id: TEAM_ID,
-      status: 'Waiting',
+      status: "Waiting",
+      create_by: "100460,100383",
       page,
-      page_size: JOB_LIST_PAGE_SIZE
+      page_size: JOB_LIST_PAGE_SIZE,
     };
 
     let response: JobListResponse;
     try {
-      ({ data: response } = await httpClient.get<JobListResponse>(JOB_LIST_BASE_URL, {
-        params,
-        headers: { token: API_TOKEN }
-      }));
+      ({ data: response } = await httpClient.get<JobListResponse>(
+        JOB_LIST_BASE_URL,
+        {
+          params,
+          headers: { token: API_TOKEN },
+        }
+      ));
     } catch (error) {
       logger.error(`Failed to fetch job list page ${page}`, error);
       throw error;
@@ -45,7 +55,10 @@ export async function fetchWaitingJobs(): Promise<JobSummary[]> {
 
     const list = response.data.list ?? [];
     const filtered = list.filter(
-      (job) => job.status === 'Waiting' && job.is_scheduled && job.scheduled_execution_time
+      (job) =>
+        job.status === "Waiting" &&
+        job.is_scheduled &&
+        job.scheduled_execution_time
     );
     waitingJobs.push(...filtered);
 
@@ -65,10 +78,13 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail | null> {
   let response: JobDetailResponse;
 
   try {
-    ({ data: response } = await httpClient.get<JobDetailResponse>(JOB_DETAIL_BASE_URL, {
-      params: { team_id: TEAM_ID, job_id: jobId },
-      headers: { token: API_TOKEN }
-    }));
+    ({ data: response } = await httpClient.get<JobDetailResponse>(
+      JOB_DETAIL_BASE_URL,
+      {
+        params: { team_id: TEAM_ID, job_id: jobId },
+        headers: { token: API_TOKEN },
+      }
+    ));
   } catch (error) {
     logger.error(`Failed to fetch job detail for job ${jobId}`, error);
     return null;
