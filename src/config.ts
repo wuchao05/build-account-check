@@ -1,22 +1,22 @@
-import { config as loadEnv } from 'dotenv';
-import { z } from 'zod';
+import { config as loadEnv } from "dotenv";
+import { z } from "zod";
 
 loadEnv();
 
 const boolSchema = z
   .preprocess((value) => {
-    if (typeof value === 'boolean') {
+    if (typeof value === "boolean") {
       return value;
     }
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       return value === 1;
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
-      if (['1', 'true', 'yes', 'y'].includes(normalized)) {
+      if (["1", "true", "yes", "y"].includes(normalized)) {
         return true;
       }
-      if (['0', 'false', 'no', 'n'].includes(normalized)) {
+      if (["0", "false", "no", "n"].includes(normalized)) {
         return false;
       }
     }
@@ -24,11 +24,26 @@ const boolSchema = z
   }, z.boolean())
   .default(true);
 
+const commaSeparatedStringArray = z
+  .preprocess((value) => {
+    if (Array.isArray(value)) {
+      return value;
+    }
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+    }
+    return value;
+  }, z.array(z.string().min(1)))
+  .refine((value) => value.length > 0, "At least one filter must be provided");
+
 const configSchema = z.object({
   // Team identifier shared by every endpoint
   TEAM_ID: z.coerce.number().int().positive(),
   // Shared token for job + account APIs
-  API_TOKEN: z.string().min(1, 'API_TOKEN is required'),
+  API_TOKEN: z.string().min(1, "API_TOKEN is required"),
   // Full URL for /batch/job/list
   JOB_LIST_BASE_URL: z.string().url(),
   // Full URL for /batch/job/detail
@@ -43,8 +58,8 @@ const configSchema = z.object({
   POLL_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
   // Minutes before earliest task to run account check
   CHECK_LEAD_TIME_MINUTES: z.coerce.number().positive().default(3),
-  // Account filter: create_user_name
-  ACCOUNT_FILTER_CREATE_USER_NAME: z.string().min(1),
+  // Account filter: create_user_name (comma-separated list)
+  ACCOUNT_FILTER_CREATE_USER_NAME: commaSeparatedStringArray,
   // Account filter: company_short_name
   ACCOUNT_FILTER_COMPANY_SHORT_NAME: z.string().min(1),
   // Max concurrency when fetching job/detail
@@ -52,7 +67,7 @@ const configSchema = z.object({
   // Whether to re-confirm account still has Waiting jobs at trigger time
   ENABLE_ACCOUNT_RECHECK: boolSchema,
   // Minimum log level to print
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info')
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
